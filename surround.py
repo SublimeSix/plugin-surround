@@ -19,12 +19,22 @@ __all__ = (
     "surround",
 )
 
+# Indicates to sublime_plugin.*Command classes whether they are enabled.
 IS_SIX_ENABLED = False
 
 
 # Initialization function. We need this to control initialization from other
 # modules and account for the case where Six isn't available.
-def surround():
+def surround(register=True):
+    """Define the Six command processor class for the Surround change plugin.
+
+    :param register:
+        If `True`, it registers the command in addition to defining it. This
+        is the standard case.
+
+    Returns the defined class. User code will mostly ignore the return value,
+    but it's interesting for testing.
+    """
     global IS_SIX_ENABLED
     IS_SIX_ENABLED = True
 
@@ -33,12 +43,9 @@ def surround():
     from Six.lib.errors import AbortCommandError
     from Six.lib.operators_internal import (
         OperatorWithoutMotion,
-        EditOperation,
         )
+    from Six.lib.yank_registers import EditOperation
 
-    # TODO: use cs for keys instead when c can act as a namespace.
-    # Register this command for the given mode and assign it the given key sequence.
-    @editor.register(mode=Mode.Normal, keys="zs")
     # Our command doesn't need a motion; it's implicit.
     class SurroundChangeSixPlugin(OperatorWithoutMotion):
         """Implements Six command processing for the Surround change command.
@@ -129,6 +136,13 @@ def surround():
             super().reset()
             self.old = None
             self.new = None
+
+    if register:
+        # TODO: use cs for keys instead when c can act as a namespace.
+        # Register this command for the given mode and assign it the given key sequence.
+        editor.register(mode=Mode.Normal, keys="zs")(SurroundChangeSixPlugin)
+
+    return SurroundChangeSixPlugin
 
 
 class _six_surround_change(sublime_plugin.TextCommand):
