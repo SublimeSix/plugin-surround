@@ -62,3 +62,36 @@ def plugin_loaded():
     editor.mappings.add(Mode.Normal, ',pp', 'a()<Esc>ha')
 
 ```
+
+## Developing Surround
+
+Install `pipenv` if you don't have it yet:
+
+    $ pip install --upgrade pip
+    $ pip install pipenv
+
+Create a virtual environment to develop Surround in:
+
+    $ cd path/to/this/repo
+    $ pipenv install
+
+Activate the virtual environment:
+
+    $ pipenv shell
+
+Now your new virtual environment should be ready.
+You can check which python interpreter is being used
+for confirmation:
+
+    $ which python # Unix
+    $ where.exe python # Windows
+    $ gcm python | slo source # PowerShell
+
+Surround strives to conform to Python's PEP8 code style guidelines
+and delegates code formatting to a tool.
+
+Here's the list of the main code analyzers used:
+
+- `yapf`
+- `flake8`
+- `pylint`
