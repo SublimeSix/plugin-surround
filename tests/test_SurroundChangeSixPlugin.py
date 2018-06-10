@@ -2,8 +2,6 @@ import unittest
 
 import sublime
 
-from sublime import Region as R
-
 from Six.lib.command_state import CommandState
 from Six.lib.constants import Mode
 from Six.lib.yank_registers import EditOperation
