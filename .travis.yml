@@ -10,8 +10,8 @@ matrix:
         - os: linux
           language: python
           python: 3.3
-        - os: osx
-          language: generic
+        # - os: osx
+        #  language: generic
 
 
 before_install:
@@ -30,9 +30,9 @@ install:
     - ln -s `pwd`/../Six "$STP/Six"
     - ln -s `pwd` "$STP/User/six"
     - echo "from User.six.surround import *\n\ndef plugin_loaded():\n    surround()\n" > "$STP/User/sixrc.py"
-    - echo '{ "tests_dir": "./six/tests" }' > "$STP/User/unittesting.json"
-    # install Package Control and package denepdencies
-    # - sh travis.sh install_package_control
+    - >
+        echo { \"tests_dir\": \"./six/tests\" } > "$STP/User/unittesting.json"
+
 
 script:
     # run tests with test coverage report
