@@ -6,17 +6,17 @@ import logging
 import sublime
 import sublime_plugin
 
-# Hook ourselves up to the Six logger. Anyhing prefixed with 'Six.' is fine,
-# but let's establish a standard (there's a 'plugin' folder in Six, hence
-# 'user.plugin' here.')
-_logger = logging.getLogger('Six.user.plugin.surround')
+# Hook ourselves up to the Six logger. Anyhing prefixed with "Six." is fine,
+# but let's establish a standard (there's a "plugin" folder in Six, hence
+# "user.plugin" here.)
+_logger = logging.getLogger("Six.user.plugin.surround")
 
 # Limit stuff that gets exported to global scope.
 __all__ = (
     # TextCommand needs to be available to Sublime Text.
-    '_six_surround_change',
+    "_six_surround_change",
     # We need this for initialization from Packages\User\sixrc.py.
-    'surround',
+    "surround",
 )
 
 IS_SIX_ENABLED = False
@@ -45,7 +45,7 @@ def surround():
         """
         def __init__(self, *args, **kwargs):
             # Give our command a name to satisfy the base class.
-            super().__init__('zs', *args, **kwargs)
+            super().__init__("zs", *args, **kwargs)
             # We want to replace this delimiter...
             self.old = None
             # ... with this other delimiter.
@@ -74,7 +74,7 @@ def surround():
             # We need to collect two keys, one for the old delimiter; the other
             # for the new one.
             for i in range(2):
-                # 'state', aka 'command state', gives us useful information about
+                # "state", aka "command state", gives us useful information about
                 # the in-flight command. And mutating its fields, we can communicate
                 # back with the Editor in charge of managing us should we need to.
                 if state.is_at_eof:
@@ -117,9 +117,9 @@ def surround():
                 # we've done our thing in ST, Six will run the Six command's
                 # lifecycle to its end (mainly calling our .reset() below and
                 # cleaning up the global Six state).
-                view.run_command('_six_surround_change', {
-                    'old': self.old,
-                    'new': self.new
+                view.run_command("_six_surround_change", {
+                    "old": self.old,
+                    "new": self.new
                 })
 
         def reset(self):
