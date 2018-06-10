@@ -23,4 +23,4 @@ class Test_one(ViewTest):
         self.view.sel().clear()
         self.view.sel().add(R(6))
 
-        self.assertEquals(7, self.view.sel()[0].b)
+        self.assertEquals(6, self.view.sel()[0].b)
