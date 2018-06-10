@@ -1,9 +1,10 @@
+"""Surround plugin for Sublime Six"""
+
 # TODO: Add tests and CI integration.
 import logging
 
 import sublime
 import sublime_plugin
-
 
 # Hook ourselves up to the Six logger. Anyhing prefixed with 'Six.' is fine,
 # but let's establish a standard (there's a 'plugin' folder in Six, hence
@@ -16,14 +17,13 @@ __all__ = (
     '_six_surround_change',
     # We need this for initialization from Packages\User\sixrc.py.
     'surround',
-    )
-
+)
 
 IS_SIX_ENABLED = False
 
 
-# Initialization function. We need this to control initialization from other modules and account
-# for the case where Six isn't available.
+# Initialization function. We need this to control initialization from other
+# modules and account for the case where Six isn't available.
 def surround():
     global IS_SIX_ENABLED
     IS_SIX_ENABLED = True
@@ -31,14 +31,18 @@ def surround():
     from Six._init_ import editor
     from Six.lib.constants import Mode
     from Six.lib.errors import AbortCommandError
-    from Six.lib.operators_internal import OperatorWithoutMotion
+    from Six.lib.operators_internal import (
+        OperatorWithoutMotion,
+        EditOperation,
+        )
 
     # TODO: use cs for keys instead when c can act as a namespace.
     # Register this command for the given mode and assign it the given key sequence.
     @editor.register(mode=Mode.Normal, keys="zs")
     # Our command doesn't need a motion; it's implicit.
     class SurroundChangeSixPlugin(OperatorWithoutMotion):
-
+        """Implements Six command processing for the Surround change command.
+        """
         def __init__(self, *args, **kwargs):
             # Give our command a name to satisfy the base class.
             super().__init__('zs', *args, **kwargs)
@@ -52,9 +56,15 @@ def surround():
         def set_parent(self, parent):
             pass
 
+        # This property is used in the context of yanking. Generally speaking,
+        # plugins should return EditOperation.Other.
+        @property
+        def kind(self):
+            return EditOperation.Other
+
         def process(self, mode, state):
             # If you run this, you will see how the keys build up as you press them.
-            _logger.info("processing keys... %s" % state.keys)
+            _logger.info("processing keys... %s", state.keys)
             # Let OperatorWithoutMotion do its part. Since most commands of this
             # kind do the same thing, the behavior is encapsulated in the base
             # class. But we are a bit of a snowflake, so we need to adjust a few
@@ -93,7 +103,7 @@ def surround():
             # Done! The command is ready to be executed next.
             state.more_input = False
 
-        def execute(self, mode, times, register):
+        def execute(self, mode, times, linewise, register, edit_operation):
             if self.old == self.new:
                 # User is tired. Stop. We could complain too; not sure what the
                 # actual Vim Surround plugin does.
@@ -108,9 +118,9 @@ def surround():
                 # lifecycle to its end (mainly calling our .reset() below and
                 # cleaning up the global Six state).
                 view.run_command('_six_surround_change', {
-                    'from_': self.old,
-                    'to': self.new
-                    })
+                    'old': self.old,
+                    'new': self.new
+                })
 
         def reset(self):
             # The Six Editor will call us to give us a chance to clean up after
@@ -127,10 +137,12 @@ class _six_surround_change(sublime_plugin.TextCommand):
     For example, zs'" replaces (') with (") if we are currently inside a string
     delimited by (').
     """
+
     def is_enabled(self, *args):
         return IS_SIX_ENABLED
 
-    def run(self, edit, from_, to):
+    def run(self, edit, old, new):
         # The drudgery above is necessary only to reach this point, where we
         # know exactly what Sublime Text needs to do. Now we have to implement it.
-        _logger.info("doing the heavy lifting here... replacing {} with {}".format(from_, to))
+        _logger.info(
+            "doing the heavy lifting here... replacing %s with %s", old, new)
