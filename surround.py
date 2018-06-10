@@ -110,7 +110,7 @@ def surround(register=True):
             # Done! The command is ready to be executed next.
             state.more_input = False
 
-        def execute(self, mode, times, linewise, register, edit_operation):
+        def execute(self, mode, times=1, linewise=False, register='"', edit_operation=None):
             if self.old == self.new:
                 # User is tired. Stop. We could complain too; not sure what the
                 # actual Vim Surround plugin does.
