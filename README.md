@@ -1,7 +1,7 @@
-# Surround --- The First Sublime Six Plugin
+# Surround – The First Sublime Six Plugin
 
 Things are bound to break along the way,
-but here we are in the spirit of 'release early, release often'.
+but here we are in the spirit of ‘release early, release often’.
 
 ## How to Use
 
