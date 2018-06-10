@@ -1,4 +1,6 @@
-# Surround – The First Sublime Six Plugin
+[![Build Status](https://travis-ci.org/SublimeSix/plugin-surround.svg?branch=master)](https://travis-ci.org/SublimeSix/plugin-surround)
+
+## Surround – The First Sublime Six Plugin
 
 Things are bound to break along the way,
 but here we are in the spirit of ‘release early, release often’.

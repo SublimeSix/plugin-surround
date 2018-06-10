@@ -42,14 +42,14 @@ def surround(register=True):
     from Six.lib.constants import Mode
     from Six.lib.errors import AbortCommandError
     from Six.lib.operators_internal import (
-        OperatorWithoutMotion,
-        )
+        OperatorWithoutMotion, )
     from Six.lib.yank_registers import EditOperation
 
     # Our command doesn't need a motion; it's implicit.
     class SurroundChangeSixPlugin(OperatorWithoutMotion):
         """Implements Six command processing for the Surround change command.
         """
+
         def __init__(self, *args, **kwargs):
             # Give our command a name to satisfy the base class.
             super().__init__("zs", *args, **kwargs)
@@ -110,7 +110,12 @@ def surround(register=True):
             # Done! The command is ready to be executed next.
             state.more_input = False
 
-        def execute(self, mode, times, linewise, register, edit_operation):
+        def execute(self,
+                    mode,
+                    times=1,
+                    linewise=False,
+                    register='"',
+                    edit_operation=None):
             if self.old == self.new:
                 # User is tired. Stop. We could complain too; not sure what the
                 # actual Vim Surround plugin does.
@@ -158,5 +163,5 @@ class _six_surround_change(sublime_plugin.TextCommand):
     def run(self, edit, old, new):
         # The drudgery above is necessary only to reach this point, where we
         # know exactly what Sublime Text needs to do. Now we have to implement it.
-        _logger.info(
-            "doing the heavy lifting here... replacing %s with %s", old, new)
+        _logger.info("doing the heavy lifting here... replacing %s with %s",
+                     old, new)
