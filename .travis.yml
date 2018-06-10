@@ -26,10 +26,15 @@ before_install:
 install:
     # bootstrap the testing environment
     - sh travis.sh bootstrap
+    # clean target directory
     - rm -rf $STP/User/*
+    # enable Six package
     - ln -s `pwd`/../Six "$STP/Six"
+    # enable our package
     - ln -s `pwd` "$STP/User/six"
+    # make sure Sublime Text will load our package
     - echo "from User.six.surround import *\n\ndef plugin_loaded():\n    surround()\n" > "$STP/User/sixrc.py"
+    # configure UnitTesting
     - >
         echo { \"tests_dir\": \"./six/tests\" } > "$STP/User/unittesting.json"
 
