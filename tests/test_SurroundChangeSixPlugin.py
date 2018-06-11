@@ -1,9 +1,11 @@
 import unittest
+from unittest import mock
 
 import sublime
 
 from Six.lib.command_state import CommandState
 from Six.lib.constants import Mode
+from Six.lib.errors import AbortCommandError
 from Six.lib.yank_registers import EditOperation
 from User.six.surround import surround
 
@@ -19,11 +21,15 @@ class ViewTest(unittest.TestCase):
         self.window.run_command('close')
 
 
-class Test_SurroundChangeSixPlugin(unittest.TestCase):
+class TestSurroundChangeSixPluginBase(unittest.TestCase):
 
     def setUp(self):
         cls = surround(register=False)
         self.command = cls()
+        self.state = CommandState()
+
+
+class Test__init__(TestSurroundChangeSixPluginBase):
 
     def test___init__(self):
         self.assertEquals("zs", self.command.name)
@@ -31,11 +37,61 @@ class Test_SurroundChangeSixPlugin(unittest.TestCase):
         self.assertIsNone(self.command.old)
         self.assertIsNone(self.command.new)
 
-    def test_stateAtEofLeadsToMoreInputRequested(self):
-        state = CommandState()
 
-        self.assertFalse(state.more_input)
+class Test_process(TestSurroundChangeSixPluginBase):
 
-        self.command.process(Mode.Normal, state)
+    def test_RequestsMoreInputIfNoInputAvailable(self):
+        self.assertFalse(self.state.more_input)
 
-        self.assertTrue(state.more_input)
+        self.command.process(Mode.Normal, self.state)
+
+        self.assertTrue(self.state.more_input)
+
+    def test_RequestsMoreInputIfNoSecondKeyAvailable(self):
+        self.assertFalse(self.state.more_input)
+
+        self.state.append('"')
+
+        self.command.process(Mode.Normal, self.state)
+
+        self.assertTrue(self.state.more_input)
+
+    def test_RaisesErrorIfUnknownDelimiter(self):
+        self.assertFalse(self.state.more_input)
+
+        self.state.append('(')
+
+        def fail():
+            self.command.process(Mode.Normal, self.state)
+
+        self.assertRaises(AbortCommandError, fail)
+
+    def test_SetsFirstKey(self):
+        self.assertFalse(self.state.more_input)
+
+        self.state.append('"')
+        self.command.process(Mode.Normal, self.state)
+
+        self.assertEquals('"', self.command.old)
+
+    def test_SetsSecondKey(self):
+        self.assertFalse(self.state.more_input)
+
+        self.state.append('"')
+        self.state.append("'")
+        self.command.process(Mode.Normal, self.state)
+
+        self.assertEquals("'", self.command.new)
+
+
+class Test_reset(TestSurroundChangeSixPluginBase):
+
+    def testResetsInternalData(self):
+        self.state.append("'")
+        self.state.append('"')
+
+        self.command.process(Mode.Normal, self.state)
+        self.command.reset()
+
+        self.assertIsNone(self.command.old)
+        self.assertIsNone(self.command.new)
