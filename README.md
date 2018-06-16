@@ -5,7 +5,7 @@
 Things are bound to break along the way,
 but here we are in the spirit of ‘release early, release often’.
 
-## How to Use
+### How to Use
 
 Six needs to find this plugin to register it.
 To make it happen:
@@ -65,7 +65,7 @@ def plugin_loaded():
 
 ```
 
-## Developing Surround
+### Developing Surround
 
 Install `pipenv` if you don't have it yet:
 
@@ -97,3 +97,20 @@ Here's the list of the main code analyzers used:
 - `yapf`
 - `flake8`
 - `pylint`
+
+
+### Running the Test Suite
+
+To run the tests,
+you need to install the following requirements:
+
+- UnitTesting package (via PackageControl)
+
+Then, you need to copy the _unittesting.json_ file in this repostitory
+to _Packages/User_.
+This is required
+so that UnitTesting
+can find the tests under _Packages/User/six/tests_.
+
+When you run the tests in UnitTesting,
+give it the *User* package name.
