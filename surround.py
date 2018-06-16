@@ -1,6 +1,5 @@
 """Surround plugin for Sublime Six"""
 
-# TODO: Add tests and CI integration.
 import logging
 
 import sublime
@@ -26,7 +25,7 @@ _logger = logging.getLogger("Six.user.plugin.surround")
 __all__ = (
     # TextCommand needs to be available to Sublime Text.
     "_six_surround_change",
-    # We need this for initialization from Packages\User\sixrc.py.
+    # We need this for initialization from Packages/User/sixrc.py.
     "surround",
 )
 
@@ -52,7 +51,7 @@ def surround(register=True):
 
     # Our command doesn't need a motion; it's implicit.
     class SurroundChangeSixPlugin(OperatorWithoutMotion):
-        """Implements Six command processing for the Surround change command.
+        """Implement Six command processing for the Surround change command.
         """
 
         def __init__(self, *args, **kwargs):
