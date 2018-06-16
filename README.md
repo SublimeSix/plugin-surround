@@ -10,8 +10,8 @@ but here we are in the spirit of ‘release early, release often’.
 Six needs to find this plugin to register it.
 To make it happen:
 
-1. Copy the `.py` files in this repo to `Packages\User\six`
-2. Create a `sixrc.py` file in `Packages\User` (any file name is fine)
+1. Copy the `.py` files in this repo to `Packages/User/six`
+2. Create a `sixrc.py` file in `Packages/User` (any file name is fine)
 
 Now include something like the following in `sixrc.py`
 (inspired by my own):
@@ -66,6 +66,10 @@ def plugin_loaded():
 ```
 
 ## Developing Surround
+
+First, clone this repository:
+
+    $ git clone https://github.com/SublimeSix/plugin-surround.git
 
 Install `pipenv` if you don't have it yet:
 
