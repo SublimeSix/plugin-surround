@@ -104,3 +104,21 @@ class Test__six_surround_change_Success(ViewTest):
 
         self.assertEquals(self.view.substr(4), '"')
         self.assertEquals(self.view.substr(8), '"')
+
+    def testCanUndoInOneStep(self):
+        self.view.run_command("append", { "characters": "aaa 'bbb' ccc" })
+        self.view.sel().clear()
+        self.view.sel().add(R(5))
+
+        self.assertEquals(self.view.substr(4), "'")
+        self.assertEquals(self.view.substr(8), "'")
+
+        self.view.run_command("_six_surround_change", { "old": "'", "new": '"' })
+
+        self.assertEquals(self.view.substr(4), '"')
+        self.assertEquals(self.view.substr(8), '"')
+
+        self.view.run_command("undo")
+
+        self.assertEquals(self.view.substr(4), "'")
+        self.assertEquals(self.view.substr(8), "'")

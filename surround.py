@@ -8,7 +8,6 @@ import sublime_plugin
 
 from sublime import Region as R
 
-# Indicates to sublime_plugin.*Command classes whether they are enabled.
 IS_SIX_ENABLED = False
 
 try:
@@ -17,7 +16,6 @@ except ImportError:
     pass
 else:
     IS_SIX_ENABLED = True
-
 
 # Hook ourselves up to the Six logger. Anyhing prefixed with "Six." is fine,
 # but let's establish a standard (there's a "plugin" folder in Six, hence
@@ -31,6 +29,7 @@ __all__ = (
     # We need this for initialization from Packages\User\sixrc.py.
     "surround",
 )
+
 
 # Initialization function. We need this to control initialization from other
 # modules and account for the case where Six isn't available.
@@ -116,12 +115,7 @@ def surround(register=True):
             # Done! The command is ready to be executed next.
             state.more_input = False
 
-        def execute(self,
-                    mode,
-                    times=1,
-                    linewise=False,
-                    register='"',
-                    edit_operation=None):
+        def execute(self, mode, times=1, register='"'):
             if self.old == self.new:
                 # User is tired. Stop. We could complain too; not sure what the
                 # actual Vim Surround plugin does.
@@ -156,7 +150,9 @@ def surround(register=True):
     return SurroundChangeSixPlugin
 
 
+# We don't load the ST commands if Six isn't available.
 if IS_SIX_ENABLED:
+
     class _six_surround_change(sublime_plugin.TextCommand):
         """Replaces delimiters.
 
@@ -164,14 +160,9 @@ if IS_SIX_ENABLED:
         delimited by (').
         """
 
-        def is_enabled(self, *args):
-            return IS_SIX_ENABLED
-
         def run(self, edit, old, new):
             # The drudgery above is necessary only to reach this point, where we
-            # know exactly what Sublime Text needs to do. Now we have to implement it.
-            _logger.info("doing the heavy lifting here... replacing %s with %s",
-                         old, new)
+            # know exactly what Sublime Text needs to do.
             a = find_in_line(self.view, old, forward=False)
             if a < 0:
                 raise AbortCommandError
@@ -183,7 +174,6 @@ if IS_SIX_ENABLED:
             self.view.replace(edit, R(a, a + 1), new)
             self.view.replace(edit, R(b, b + 1), new)
 
-
     def find_in_line(view, character, forward=True):
         """Find a character in the current line.
         :param view:
@@ -193,9 +183,9 @@ if IS_SIX_ENABLED:
         :param forward:
             Whether to search forward or backwards.
 
-        Returns 0 or a positive integer if the character was found. The number indicates the
-        character position in the view. Returns a negative number if the character wasn't
-        found.
+        Returns 0 or a positive integer if the character was found. The number indicates
+        the character position in the view. Returns a negative number if the character
+        wasn't found.
         """
         pt = view.sel()[0].b
         limit = view.line(pt).end() if forward else view.line(pt).begin()
