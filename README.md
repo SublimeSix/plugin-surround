@@ -99,7 +99,7 @@ Here's the list of the main code analyzers used:
 - `pylint`
 
 
-### Running the Test Suite
+#### Running the Test Suite
 
 To run the tests,
 you need to install the following requirements:
