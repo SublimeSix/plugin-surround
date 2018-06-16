@@ -6,6 +6,19 @@ import logging
 import sublime
 import sublime_plugin
 
+from sublime import Region as R
+
+# Indicates to sublime_plugin.*Command classes whether they are enabled.
+IS_SIX_ENABLED = False
+
+try:
+    from Six.lib.errors import AbortCommandError
+except ImportError:
+    pass
+else:
+    IS_SIX_ENABLED = True
+
+
 # Hook ourselves up to the Six logger. Anyhing prefixed with "Six." is fine,
 # but let's establish a standard (there's a "plugin" folder in Six, hence
 # "user.plugin" here.)
@@ -19,10 +32,6 @@ __all__ = (
     "surround",
 )
 
-# Indicates to sublime_plugin.*Command classes whether they are enabled.
-IS_SIX_ENABLED = False
-
-
 # Initialization function. We need this to control initialization from other
 # modules and account for the case where Six isn't available.
 def surround(register=True):
@@ -35,9 +44,6 @@ def surround(register=True):
     Returns the defined class. User code will mostly ignore the return value,
     but it's interesting for testing.
     """
-    global IS_SIX_ENABLED
-    IS_SIX_ENABLED = True
-
     from Six._init_ import editor
     from Six.lib.constants import Mode
     from Six.lib.errors import AbortCommandError
@@ -150,18 +156,57 @@ def surround(register=True):
     return SurroundChangeSixPlugin
 
 
-class _six_surround_change(sublime_plugin.TextCommand):
-    """Replaces delimiters.
+if IS_SIX_ENABLED:
+    class _six_surround_change(sublime_plugin.TextCommand):
+        """Replaces delimiters.
 
-    For example, zs'" replaces (') with (") if we are currently inside a string
-    delimited by (').
-    """
+        For example, zs'" replaces (') with (") if we are currently inside a string
+        delimited by (').
+        """
 
-    def is_enabled(self, *args):
-        return IS_SIX_ENABLED
+        def is_enabled(self, *args):
+            return IS_SIX_ENABLED
 
-    def run(self, edit, old, new):
-        # The drudgery above is necessary only to reach this point, where we
-        # know exactly what Sublime Text needs to do. Now we have to implement it.
-        _logger.info("doing the heavy lifting here... replacing %s with %s",
-                     old, new)
+        def run(self, edit, old, new):
+            # The drudgery above is necessary only to reach this point, where we
+            # know exactly what Sublime Text needs to do. Now we have to implement it.
+            _logger.info("doing the heavy lifting here... replacing %s with %s",
+                         old, new)
+            a = find_in_line(self.view, old, forward=False)
+            if a < 0:
+                raise AbortCommandError
+
+            b = find_in_line(self.view, old)
+            if b < 0:
+                raise AbortCommandError
+
+            self.view.replace(edit, R(a, a + 1), new)
+            self.view.replace(edit, R(b, b + 1), new)
+
+
+    def find_in_line(view, character, forward=True):
+        """Find a character in the current line.
+        :param view:
+            The view where we are performing the search.
+        :param character:
+            The sought character.
+        :param forward:
+            Whether to search forward or backwards.
+
+        Returns 0 or a positive integer if the character was found. The number indicates the
+        character position in the view. Returns a negative number if the character wasn't
+        found.
+        """
+        pt = view.sel()[0].b
+        limit = view.line(pt).end() if forward else view.line(pt).begin()
+        is_within_limits = (lambda x: x < limit) if forward else (lambda x: x >= limit)
+        increment = 1 if forward else -1
+
+        while is_within_limits(pt):
+            if view.substr(pt) == character:
+                break
+            pt += increment
+        else:
+            return -1
+
+        return pt
