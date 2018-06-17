@@ -10,7 +10,8 @@ from sublime import Region as R
 IS_SIX_ENABLED = False
 
 try:
-    from Six.lib.errors import AbortCommandError
+    # Check whether Six is available.
+    from Six.lib.errors import AbortCommandError  # noqa: F401
 except ImportError:
     pass
 else:
@@ -29,6 +30,17 @@ __all__ = (
     "surround",
 )
 
+BRACKETS = {
+    "'": ("'", "'"),
+    '"': ('"', '"'),
+    "(": ("(", ")"),
+    ")": ("(", ")"),
+    "[": ("[", "]"),
+    "]": ("[", "]"),
+    r"{": ("{", "}"),
+    r"}": ("{", "}"),
+}
+
 
 # Initialization function. We need this to control initialization from other
 # modules and account for the case where Six isn't available.
@@ -44,7 +56,7 @@ def surround(register=True):
     """
     from Six._init_ import editor
     from Six.lib.constants import Mode
-    from Six.lib.errors import AbortCommandError
+    from Six.lib.errors import AbortCommandError  # noqa: F811
     from Six.lib.operators_internal import (
         OperatorWithoutMotion, )
     from Six.lib.yank_registers import EditOperation
@@ -74,12 +86,13 @@ def surround(register=True):
             return EditOperation.Other
 
         def process(self, mode, state):
-            # If you run this, you will see how the keys build up as you press them.
-            _logger.info("processing keys... %s", state.keys)
-            # Let OperatorWithoutMotion do its part. Since most commands of this
-            # kind do the same thing, the behavior is encapsulated in the base
-            # class. But we are a bit of a snowflake, so we need to adjust a few
-            # things below.
+            # If you uncomment the logging line and run this plugin, you will see how
+            # the keys build up as you press them.
+            # _logger.info("processing keys... %s", state.keys)
+
+            # Let OperatorWithoutMotion do its part. Since most commands of this kind do
+            # the same thing, the behavior is encapsulated in the base class. But we are
+            # a bit of a snowflake, so we need to adjust a few things below.
             super().process(mode, state)
 
             # We need to collect two keys, one for the old delimiter; the other
@@ -93,15 +106,15 @@ def surround(register=True):
                     state.more_input = True
                     return
 
-                # The key index is incremented for us as keys are consumed while
-                # the command is processed upstream. At this point, zs have been
-                # consumed. Let's satisfy our requirements now if we can.
+                # The key index is incremented for us as keys are consumed while the
+                # command is processed upstream. At this point, zs have been consumed.
+                # Let's satisfy our requirements now if we can.
                 key = state.next()
 
                 # TODO: support more delimiters.
-                if key not in ('"', "'"):
-                    # Let the Editor know that something went wrong. Maybe this
-                    # isn't the best error to raise here, but it'll do for now.
+                if key not in BRACKETS:
+                    # Let the Editor know that something went wrong. Maybe this isn't
+                    # the best error to raise here, but it'll do for now.
                     raise AbortCommandError
 
                 if i == 0:
@@ -116,27 +129,27 @@ def surround(register=True):
 
         def execute(self, mode, times=1, register='"'):
             if self.old == self.new:
-                # User is tired. Stop. We could complain too; not sure what the
+                # No change needed. Stop. We could complain too; not sure what the
                 # actual Vim Surround plugin does.
-                _logger.info("no change needed; stop here")
+                pass
             else:
-                # This is a bit ugly and Six should help us hide these details,
-                # but that isn't ready yet.
+                # This is a bit ugly and Six should help us hide these details, but that
+                # isn't ready yet.
                 view = sublime.active_window().active_view()
-                # The processing Six needs to do before we can actually change
-                # the Sublime Text state is done. Delegate to an ST command. After
-                # we've done our thing in ST, Six will run the Six command's
-                # lifecycle to its end (mainly calling our .reset() below and
-                # cleaning up the global Six state).
+                # The processing Six needs to do before we can actually change the
+                # Sublime Text state is done. Delegate to an ST command. After we've
+                # done our thing in ST, Six will run the Six command's lifecycle to its
+                # end (mainly calling our .reset() below and cleaning up the global Six
+                # state).
                 view.run_command("_six_surround_change", {
                     "old": self.old,
                     "new": self.new
                 })
 
         def reset(self):
-            # The Six Editor will call us to give us a chance to clean up after
-            # we have been executed.
-            _logger.info("resetting...")
+            # The Six Editor will call us to give us a chance to clean up after we have
+            # been executed.
+            # _logger.info("resetting...")
             super().reset()
             self.old = None
             self.new = None
@@ -160,18 +173,27 @@ if IS_SIX_ENABLED:
         """
 
         def run(self, edit, old, new):
-            # The drudgery above is necessary only to reach this point, where we
-            # know exactly what Sublime Text needs to do.
-            a = find_in_line(self.view, old, forward=False)
+            # The drudgery above is necessary only to reach this point, where we know
+            # exactly what Sublime Text needs to do.
+            old_a, old_b = BRACKETS[old]
+            new_a, new_b = BRACKETS[new]
+
+            a = find_in_line(self.view, old_a, forward=False)
             if a < 0:
-                raise AbortCommandError
+                # TODO: Signal the state that it should abort.
+                # Caller can't catch this exception from the command; just stop.
+                # raise AbortCommandError
+                return
 
-            b = find_in_line(self.view, old)
+            b = find_in_line(self.view, old_b)
             if b < 0:
-                raise AbortCommandError
+                # TODO: Signal the state that it should abort.
+                # Caller can't catch this exception from the command; just stop.
+                # raise AbortCommandError
+                return
 
-            self.view.replace(edit, R(a, a + 1), new)
-            self.view.replace(edit, R(b, b + 1), new)
+            self.view.replace(edit, R(a, a + 1), new_a)
+            self.view.replace(edit, R(b, b + 1), new_b)
 
     def find_in_line(view, character, forward=True):
         """Find a character in the current line.

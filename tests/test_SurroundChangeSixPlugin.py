@@ -56,10 +56,46 @@ class Test_process(TestSurroundChangeSixPluginBase):
 
         self.assertTrue(self.state.more_input)
 
+    def test_RequestsMoreInputIfNoSecondKeyAvailableSingleQuote(self):
+        self.assertFalse(self.state.more_input)
+
+        self.state.append("'")
+
+        self.command.process(Mode.Normal, self.state)
+
+        self.assertTrue(self.state.more_input)
+
+    def test_RequestsMoreInputIfNoSecondKeyAvailableParenthesis(self):
+        self.assertFalse(self.state.more_input)
+
+        self.state.append("[")
+
+        self.command.process(Mode.Normal, self.state)
+
+        self.assertTrue(self.state.more_input)
+
+    def test_RequestsMoreInputIfNoSecondKeyAvailableCurlyBracket(self):
+        self.assertFalse(self.state.more_input)
+
+        self.state.append("(")
+
+        self.command.process(Mode.Normal, self.state)
+
+        self.assertTrue(self.state.more_input)
+
+    def test_RequestsMoreInputIfNoSecondKeyAvailableSquaredBracket(self):
+        self.assertFalse(self.state.more_input)
+
+        self.state.append("{")
+
+        self.command.process(Mode.Normal, self.state)
+
+        self.assertTrue(self.state.more_input)
+
     def test_RaisesErrorIfUnknownDelimiter(self):
         self.assertFalse(self.state.more_input)
 
-        self.state.append('(')
+        self.state.append('?')
 
         def fail():
             self.command.process(Mode.Normal, self.state)
