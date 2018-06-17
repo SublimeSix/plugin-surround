@@ -30,6 +30,17 @@ __all__ = (
 )
 
 
+BRACKETS = {
+    "'": ("'", "'"),
+    '"': ('"', '"'),
+    "(": ("(", ")"),
+    ")": ("(", ")"),
+    "[": ("[", "]"),
+    "]": ("[", "]"),
+    r"{": ("{", "}"),
+    r"}": ("{", "}"),
+}
+
 # Initialization function. We need this to control initialization from other
 # modules and account for the case where Six isn't available.
 def surround(register=True):
@@ -99,7 +110,7 @@ def surround(register=True):
                 key = state.next()
 
                 # TODO: support more delimiters.
-                if key not in ('"', "'"):
+                if key not in BRACKETS:
                     # Let the Editor know that something went wrong. Maybe this
                     # isn't the best error to raise here, but it'll do for now.
                     raise AbortCommandError
@@ -131,7 +142,7 @@ def surround(register=True):
                 view.run_command("_six_surround_change", {
                     "old": self.old,
                     "new": self.new
-                })
+                    })
 
         def reset(self):
             # The Six Editor will call us to give us a chance to clean up after
@@ -162,16 +173,25 @@ if IS_SIX_ENABLED:
         def run(self, edit, old, new):
             # The drudgery above is necessary only to reach this point, where we
             # know exactly what Sublime Text needs to do.
-            a = find_in_line(self.view, old, forward=False)
+            old_a, old_b = BRACKETS[old]
+            new_a, new_b = BRACKETS[new]
+
+            a = find_in_line(self.view, old_a, forward=False)
             if a < 0:
-                raise AbortCommandError
+                # TODO: Signal the state that it should abort.
+                # Caller can't catch this exception from the command; just stop.
+                # raise AbortCommandError
+                return
 
-            b = find_in_line(self.view, old)
+            b = find_in_line(self.view, old_b)
             if b < 0:
-                raise AbortCommandError
+                # TODO: Signal the state that it should abort.
+                # Caller can't catch this exception from the command; just stop.
+                # raise AbortCommandError
+                return
 
-            self.view.replace(edit, R(a, a + 1), new)
-            self.view.replace(edit, R(b, b + 1), new)
+            self.view.replace(edit, R(a, a + 1), new_a)
+            self.view.replace(edit, R(b, b + 1), new_b)
 
     def find_in_line(view, character, forward=True):
         """Find a character in the current line.

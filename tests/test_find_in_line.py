@@ -11,6 +11,7 @@ from Six.lib.errors import AbortCommandError
 from Six.lib.yank_registers import EditOperation
 
 from User.six.surround import find_in_line
+from User.six.surround import BRACKETS
 
 
 class ViewTest(unittest.TestCase):
@@ -63,7 +64,7 @@ class Test_find_in_line(ViewTest):
         self.assertEquals(rv, 4)
 
 
-@unittest.skip("view.run_command does not reaise error in test")
+@unittest.skip("view.run_command does not raise error in test")
 class Test__six_surround_change_Errors(ViewTest):
 
     def testFailIfCannotFindLeftBracket(self):
@@ -99,13 +100,22 @@ class Test__six_surround_change_Success(ViewTest):
         self.view.sel().clear()
         self.view.sel().add(R(5))
 
-        self.assertEquals(self.view.substr(4), "'")
-        self.assertEquals(self.view.substr(8), "'")
+        old = "'"
 
-        self.view.run_command("_six_surround_change", { "old": "'", "new": '"' })
+        for new, brackets in BRACKETS.items():
+            # with self.subTest(bracket=new): # Not supported in Python 3.3
+            old_a, old_b = BRACKETS[old]
+            new_a, new_b = brackets
 
-        self.assertEquals(self.view.substr(4), '"')
-        self.assertEquals(self.view.substr(8), '"')
+            self.assertEquals(self.view.substr(4), old_a)
+            self.assertEquals(self.view.substr(8), old_b)
+
+            self.view.run_command("_six_surround_change", { "old": old, "new": new })
+
+            self.assertEquals(self.view.substr(4), new_a)
+            self.assertEquals(self.view.substr(8), new_b)
+
+            old = new
 
     def testCanUndoInOneStep(self):
         self.view.run_command("append", { "characters": "aaa 'bbb' ccc" })
