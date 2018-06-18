@@ -12,6 +12,7 @@ IS_SIX_ENABLED = False
 try:
     # Check whether Six is available.
     from Six.lib.errors import AbortCommandError  # noqa: F401
+    from Six.lib.constants import Key  # noqa: F401
 except ImportError:
     pass
 else:
@@ -104,6 +105,8 @@ def surround(register=True):
                 if state.is_at_eof:
                     # No more keys from user available -- request more.
                     state.more_input = True
+                    # Let the Editor know that we accept any key as input.
+                    state.is_accepting_any_input = True
                     return
 
                 # The key index is incremented for us as keys are consumed while the
