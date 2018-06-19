@@ -68,7 +68,7 @@ def surround(register=True):
 
         def __init__(self, *args, **kwargs):
             # Give our command a name to satisfy the base class.
-            super().__init__("zs", *args, **kwargs)
+            super().__init__("CSurround", *args, **kwargs)
             # We want to replace this delimiter...
             self.old = None
             # ... with this other delimiter.
@@ -107,7 +107,7 @@ def surround(register=True):
                     return
 
                 # The key index is incremented for us as keys are consumed while the
-                # command is processed upstream. At this point, zs have been consumed.
+                # command is processed upstream. At this point, cs have been consumed.
                 # Let's satisfy our requirements now if we can.
                 key = state.next()
 
@@ -127,7 +127,7 @@ def surround(register=True):
             # Done! The command is ready to be executed next.
             state.more_input = False
 
-        def execute(self, mode, times=1, register='"'):
+        def execute(self, mode=Mode.InternalNormal, times=1, register='"'):
             if self.old == self.new:
                 # No change needed. Stop. We could complain too; not sure what the
                 # actual Vim Surround plugin does.
@@ -155,9 +155,10 @@ def surround(register=True):
             self.new = None
 
     if register:
-        # TODO: use cs for keys instead when c can act as a namespace.
         # Register this command for the given mode and assign it the given key sequence.
-        editor.register(mode=Mode.Normal, keys="zs")(SurroundChangeSixPlugin)
+        editor.register(
+            mode=Mode.Normal, keys="<Plug>CSurround")(SurroundChangeSixPlugin)
+        editor.mappings.add(Mode.Normal, "cs", "<Plug>CSurround")
 
     return SurroundChangeSixPlugin
 
@@ -168,7 +169,7 @@ if IS_SIX_ENABLED:
     class _six_surround_change(sublime_plugin.TextCommand):
         """Replaces delimiters.
 
-        For example, zs'" replaces (') with (") if we are currently inside a string
+        For example, cs'" replaces (') with (") if we are currently inside a string
         delimited by (').
         """
 

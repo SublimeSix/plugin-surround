@@ -32,7 +32,7 @@ class TestSurroundChangeSixPluginBase(unittest.TestCase):
 class Test__init__(TestSurroundChangeSixPluginBase):
 
     def test___init__(self):
-        self.assertEquals("zs", self.command.name)
+        self.assertEquals("CSurround", self.command.name)
         self.assertEquals(EditOperation.Other, self.command.kind)
         self.assertIsNone(self.command.old)
         self.assertIsNone(self.command.new)
