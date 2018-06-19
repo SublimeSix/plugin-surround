@@ -74,11 +74,6 @@ def surround(register=True):
             # ... with this other delimiter.
             self.new = None
 
-        # We shouldn't need to implement this as an operator. But because we are
-        # technically inside an OperatorOrMotion (z), we must, at least for now.
-        def set_parent(self, parent):
-            pass
-
         # This property is used in the context of yanking. Generally speaking,
         # plugins should return EditOperation.Other.
         @property
@@ -155,7 +150,8 @@ def surround(register=True):
             self.new = None
 
     if register:
-        # Register this command for the given mode and assign it the given key sequence.
+        # Register this command as a plugin for the given mode and assign it the given
+        # key sequence.
         editor.register(
             mode=Mode.Normal, keys="<Plug>CSurround")(SurroundChangeSixPlugin)
         editor.mappings.add(Mode.Normal, "cs", "<Plug>CSurround")
@@ -203,10 +199,10 @@ if IS_SIX_ENABLED:
         :param character:
             The sought character.
         :param forward:
-            Whether to search forward or backwards.
+            If `True`, search forward. If `False`, search backwards.
 
         Returns 0 or a positive integer if the character was found. The number indicates
-        the character position in the view. Returns a negative number if the character
+        the character position in the view. Returns a negative integer if the character
         wasn't found.
         """
         pt = view.sel()[0].b
