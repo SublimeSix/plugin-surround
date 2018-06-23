@@ -7,16 +7,8 @@ import sublime_plugin
 
 from sublime import Region as R
 
-IS_SIX_ENABLED = False
-
-try:
-    # Check whether Six is available.
-    from Six.lib.errors import AbortCommandError  # noqa: F401
-    from Six.lib.constants import Key  # noqa: F401
-except ImportError:
-    pass
-else:
-    IS_SIX_ENABLED = True
+# We assume Six is installed and available.
+from Six.lib.errors import AbortCommandError  # noqa: F401
 
 # Hook ourselves up to the Six logger. Anyhing prefixed with "Six." is fine,
 # but let's establish a standard (there's a "plugin" folder in Six, hence
@@ -74,11 +66,6 @@ def surround(register=True):
             self.old = None
             # ... with this other delimiter.
             self.new = None
-
-        # We shouldn't need to implement this as an operator. But because we are
-        # technically inside an OperatorOrMotion (z), we must, at least for now.
-        def set_parent(self, parent):
-            pass
 
         # This property is used in the context of yanking. Generally speaking,
         # plugins should return EditOperation.Other.
@@ -158,7 +145,8 @@ def surround(register=True):
             self.new = None
 
     if register:
-        # Register this command for the given mode and assign it the given key sequence.
+        # Register this command as a plugin for the given mode and assign it the given
+        # key sequence.
         editor.register(
             mode=Mode.Normal, keys="<Plug>CSurround")(SurroundChangeSixPlugin)
         editor.mappings.add(Mode.Normal, "cs", "<Plug>CSurround")
@@ -166,62 +154,59 @@ def surround(register=True):
     return SurroundChangeSixPlugin
 
 
-# We don't load the ST commands if Six isn't available.
-if IS_SIX_ENABLED:
+class _six_surround_change(sublime_plugin.TextCommand):
+    """Replaces delimiters.
 
-    class _six_surround_change(sublime_plugin.TextCommand):
-        """Replaces delimiters.
+    For example, cs'" replaces (') with (") if we are currently inside a string
+    delimited by (').
+    """
 
-        For example, cs'" replaces (') with (") if we are currently inside a string
-        delimited by (').
-        """
+    def run(self, edit, old, new):
+        # The drudgery above is necessary only to reach this point, where we know
+        # exactly what Sublime Text needs to do.
+        old_a, old_b = BRACKETS[old]
+        new_a, new_b = BRACKETS[new]
 
-        def run(self, edit, old, new):
-            # The drudgery above is necessary only to reach this point, where we know
-            # exactly what Sublime Text needs to do.
-            old_a, old_b = BRACKETS[old]
-            new_a, new_b = BRACKETS[new]
+        a = find_in_line(self.view, old_a, forward=False)
+        if a < 0:
+            # TODO: Signal the state that it should abort.
+            # Caller can't catch this exception from the command; just stop.
+            # raise AbortCommandError
+            return
 
-            a = find_in_line(self.view, old_a, forward=False)
-            if a < 0:
-                # TODO: Signal the state that it should abort.
-                # Caller can't catch this exception from the command; just stop.
-                # raise AbortCommandError
-                return
+        b = find_in_line(self.view, old_b)
+        if b < 0:
+            # TODO: Signal the state that it should abort.
+            # Caller can't catch this exception from the command; just stop.
+            # raise AbortCommandError
+            return
 
-            b = find_in_line(self.view, old_b)
-            if b < 0:
-                # TODO: Signal the state that it should abort.
-                # Caller can't catch this exception from the command; just stop.
-                # raise AbortCommandError
-                return
+        self.view.replace(edit, R(a, a + 1), new_a)
+        self.view.replace(edit, R(b, b + 1), new_b)
 
-            self.view.replace(edit, R(a, a + 1), new_a)
-            self.view.replace(edit, R(b, b + 1), new_b)
+def find_in_line(view, character, forward=True):
+    """Find a character in the current line.
+    :param view:
+        The view where we are performing the search.
+    :param character:
+        The sought character.
+    :param forward:
+        If `True`, search forward. If `False`, search backwards.
 
-    def find_in_line(view, character, forward=True):
-        """Find a character in the current line.
-        :param view:
-            The view where we are performing the search.
-        :param character:
-            The sought character.
-        :param forward:
-            Whether to search forward or backwards.
+    Returns 0 or a positive integer if the character was found. The number indicates
+    the character position in the view. Returns a negative integer if the character
+    wasn't found.
+    """
+    pt = view.sel()[0].b
+    limit = view.line(pt).end() if forward else view.line(pt).begin()
+    is_within_limits = (lambda x: x < limit) if forward else (lambda x: x >= limit)
+    increment = 1 if forward else -1
 
-        Returns 0 or a positive integer if the character was found. The number indicates
-        the character position in the view. Returns a negative number if the character
-        wasn't found.
-        """
-        pt = view.sel()[0].b
-        limit = view.line(pt).end() if forward else view.line(pt).begin()
-        is_within_limits = (lambda x: x < limit) if forward else (lambda x: x >= limit)
-        increment = 1 if forward else -1
+    while is_within_limits(pt):
+        if view.substr(pt) == character:
+            break
+        pt += increment
+    else:
+        return -1
 
-        while is_within_limits(pt):
-            if view.substr(pt) == character:
-                break
-            pt += increment
-        else:
-            return -1
-
-        return pt
+    return pt
