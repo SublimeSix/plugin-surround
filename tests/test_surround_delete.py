@@ -16,7 +16,6 @@ from User.six.surround import find_in_line
 from User.six.surround import BRACKETS
 
 
-@unittest.skip("view.run_command does not raise error in test")
 class Test__six_surround_delete(ViewTest):
 
     def testFailIfCannotFindLeftBracket(self):
@@ -44,7 +43,6 @@ class Test__six_surround_delete(ViewTest):
         self.assertRaises(ValueError, fail)
 
 
-# @unittest.skipIf(sublime.platform() == "linux" and os.environ["TRAVIS"], "always fails in Travis-CI for Linux")
 class Test__six_surround_delete(ViewTest):
 
     def testCanReplace(self):
