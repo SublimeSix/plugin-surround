@@ -19,6 +19,7 @@ _logger = logging.getLogger("Six.user.plugin.surround")
 __all__ = (
     # TextCommand needs to be available to Sublime Text.
     "_six_surround_change",
+    "_six_surround_delete",
     # We need this for initialization from Packages/User/sixrc.py.
     "surround",
 )
@@ -142,14 +143,56 @@ def surround(register=True):
             self.old = None
             self.new = None
 
+
+    class SurroundDeleteSixPlugin(OperatorWithoutMotion):
+        """Implement Six command processing for the Surround delete command.
+        """
+
+        def __init__(self, *args, **kwargs):
+            super().__init__("DSurround", *args, **kwargs)
+            self.old = None
+
+        @property
+        def kind(self):
+            return EditOperation.Other
+
+        def process(self, mode, state):
+            super().process(mode, state)
+
+            if state.is_at_eof:
+                state.more_input = True
+                return
+
+            key = state.next()
+
+            if key not in BRACKETS:
+                raise AbortCommandError
+
+            self.old = key
+
+            state.more_input = False
+
+        def execute(self, mode=Mode.InternalNormal, times=1, register='"'):
+            view = sublime.active_window().active_view()
+            view.run_command("_six_surround_delete", { "old": self.old })
+
+        def reset(self):
+            super().reset()
+            self.old = None
+
     if register:
-        # Register this command as a plugin for the given mode and assign it the given
+        # Register commands as a plugin for the given mode and assign them the given
         # key sequence.
         editor.register(
             mode=Mode.Normal, keys="<Plug>CSurround")(SurroundChangeSixPlugin)
-        editor.mappings.add(Mode.Normal, "cs", "<Plug>CSurround")
+        editor.register(
+            mode=Mode.Normal, keys="<Plug>DSurround")(SurroundDeleteSixPlugin)
+        editor.mappings.add(Mode.Normal, "ds", "<Plug>DSurround")
 
-    return SurroundChangeSixPlugin
+    return {
+        "CSurround": SurroundChangeSixPlugin,
+        "DSurround": SurroundDeleteSixPlugin,
+        }
 
 
 class _six_surround_change(sublime_plugin.TextCommand):
@@ -208,3 +251,32 @@ def find_in_line(view, character, forward=True):
         return -1
 
     return pt
+
+
+class _six_surround_delete(sublime_plugin.TextCommand):
+    """Deletes delimiters.
+
+    For example, ds" deletes (") deletes (") at both sides of the caret.
+    """
+
+    def run(self, edit, old):
+        # The drudgery above is necessary only to reach this point, where we know
+        # exactly what Sublime Text needs to do.
+        old_a, old_b = BRACKETS[old]
+
+        a = find_in_line(self.view, old_a, forward=False)
+        if a < 0:
+            # TODO: Signal the state that it should abort.
+            # Caller can't catch this exception from the command; just stop.
+            # raise AbortCommandError
+            return
+
+        b = find_in_line(self.view, old_b)
+        if b < 0:
+            # TODO: Signal the state that it should abort.
+            # Caller can't catch this exception from the command; just stop.
+            # raise AbortCommandError
+            return
+
+        self.view.erase(edit, R(b, b + 1))
+        self.view.erase(edit, R(a, a + 1))
