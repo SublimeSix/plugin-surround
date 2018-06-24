@@ -18,33 +18,6 @@ from User.six.surround import BRACKETS
 
 class Test__six_surround_delete(ViewTest):
 
-    def testFailIfCannotFindLeftBracket(self):
-        self.view.sel().clear()
-        self.view.sel().add(R(0))
-
-        old = "'"
-        new = None
-        def fail():
-            self.view.run_command("_six_surround_delete", { "old": old })
-
-        self.assertRaises(ValueError, fail)
-
-
-    def testFailIfCannotFindRightBracket(self):
-        self.view.run_command("append", { "characters": "aaa 'bbb ccc" })
-        self.view.sel().clear()
-        self.view.sel().add(R(5))
-
-        old = "'"
-        new = '"'
-        def fail():
-            self.view.run_command("_six_surround_delete", { "old": old })
-
-        self.assertRaises(ValueError, fail)
-
-
-class Test__six_surround_delete(ViewTest):
-
     def testCanReplace(self):
         self.view.run_command("append", { "characters": "aaa bbb ccc" })
         self.view.sel().clear()
