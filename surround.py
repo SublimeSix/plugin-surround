@@ -9,6 +9,7 @@ from sublime import Region as R
 
 # We assume Six is installed and available.
 from Six.lib.errors import AbortCommandError  # noqa: F401
+from Six.plugin import ActiveViewAwareMixin  # noqa: F401
 
 # Hook ourselves up to the Six logger. Anyhing prefixed with "Six." is fine,
 # but let's establish a standard (there's a "plugin" folder in Six, hence
@@ -56,7 +57,7 @@ def surround(register=True):
     from Six.lib.yank_registers import EditOperation
 
     # Our command doesn't need a motion; it's implicit.
-    class SurroundChangeSixPlugin(OperatorWithoutMotion):
+    class SurroundChangeSixPlugin(OperatorWithoutMotion, ActiveViewAwareMixin):
         """Implement Six command processing for the Surround change command.
         """
 
@@ -122,15 +123,12 @@ def surround(register=True):
                 # actual Vim Surround plugin does.
                 pass
             else:
-                # This is a bit ugly and Six should help us hide these details, but that
-                # isn't ready yet.
-                view = sublime.active_window().active_view()
                 # The processing Six needs to do before we can actually change the
                 # Sublime Text state is done. Delegate to an ST command. After we've
                 # done our thing in ST, Six will run the Six command's lifecycle to its
                 # end (mainly calling our .reset() below and cleaning up the global Six
                 # state).
-                view.run_command("_six_surround_change", {
+                self.view.run_command("_six_surround_change", {
                     "old": self.old,
                     "new": self.new
                 })
@@ -143,8 +141,7 @@ def surround(register=True):
             self.old = None
             self.new = None
 
-
-    class SurroundDeleteSixPlugin(OperatorWithoutMotion):
+    class SurroundDeleteSixPlugin(OperatorWithoutMotion, ActiveViewAwareMixin):
         """Implement Six command processing for the Surround delete command.
         """
 
@@ -173,15 +170,14 @@ def surround(register=True):
             state.more_input = False
 
         def execute(self, mode=Mode.InternalNormal, times=1, register='"'):
-            view = sublime.active_window().active_view()
-            view.run_command("_six_surround_delete", { "old": self.old })
+            self.view.run_command("_six_surround_delete", {"old": self.old})
 
         def reset(self):
             super().reset()
             self.old = None
 
     if register:
-        # Register commands as a plugin for the given mode and assign them the given
+        # Register commands as plugins for the given mode and assign them the given
         # key sequence.
         editor.register(
             mode=Mode.Normal, keys="<Plug>CSurround")(SurroundChangeSixPlugin)
@@ -193,7 +189,7 @@ def surround(register=True):
     return {
         "CSurround": SurroundChangeSixPlugin,
         "DSurround": SurroundDeleteSixPlugin,
-        }
+    }
 
 
 class _six_surround_change(sublime_plugin.TextCommand):
@@ -226,6 +222,7 @@ class _six_surround_change(sublime_plugin.TextCommand):
         self.view.replace(edit, R(a, a + 1), new_a)
         self.view.replace(edit, R(b, b + 1), new_b)
 
+
 def find_in_line(view, character, forward=True):
     """Find a character in the current line.
     :param view:
@@ -257,26 +254,18 @@ def find_in_line(view, character, forward=True):
 class _six_surround_delete(sublime_plugin.TextCommand):
     """Deletes delimiters.
 
-    For example, ds" deletes (") deletes (") at both sides of the caret.
+    For example, ds" deletes (") at both sides of the caret.
     """
 
     def run(self, edit, old):
-        # The drudgery above is necessary only to reach this point, where we know
-        # exactly what Sublime Text needs to do.
         old_a, old_b = BRACKETS[old]
 
         a = find_in_line(self.view, old_a, forward=False)
         if a < 0:
-            # TODO: Signal the state that it should abort.
-            # Caller can't catch this exception from the command; just stop.
-            # raise AbortCommandError
             return
 
         b = find_in_line(self.view, old_b)
         if b < 0:
-            # TODO: Signal the state that it should abort.
-            # Caller can't catch this exception from the command; just stop.
-            # raise AbortCommandError
             return
 
         self.view.erase(edit, R(b, b + 1))
