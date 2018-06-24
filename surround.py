@@ -187,6 +187,7 @@ def surround(register=True):
             mode=Mode.Normal, keys="<Plug>CSurround")(SurroundChangeSixPlugin)
         editor.register(
             mode=Mode.Normal, keys="<Plug>DSurround")(SurroundDeleteSixPlugin)
+        editor.mappings.add(Mode.Normal, "cs", "<Plug>CSurround")
         editor.mappings.add(Mode.Normal, "ds", "<Plug>DSurround")
 
     return {
