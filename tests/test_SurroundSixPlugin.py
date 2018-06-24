@@ -9,18 +9,9 @@ from Six.lib.command_state import CommandState
 from Six.lib.constants import Mode
 from Six.lib.errors import AbortCommandError
 from Six.lib.yank_registers import EditOperation
+
 from User.six.surround import surround
-
-
-class ViewTest(unittest.TestCase):
-
-    def setUp(self):
-        self.window = sublime.active_window()
-        self.view = self.window.new_file()
-        self.view.set_scratch(True)
-
-    def tearDown(self):
-        self.window.run_command('close')
+from User.six.tests import ViewTest
 
 
 class TestSurroundSixPluginBase(unittest.TestCase):
