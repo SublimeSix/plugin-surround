@@ -2,10 +2,25 @@
 
 ## Surround – The First Sublime Six Plugin
 
-Things are bound to break along the way,
-but here we are in the spirit of ‘release early, release often’.
+This plugin is functional but under constant development.
 
-### How to Use
+The surround plugin adds a few commands
+to opearte on delimiters.
+For example, given the following line
+(where `^` denotes the caret)
+
+    one "two" three
+         ^ 
+
+the command `cs"'` would produce
+
+    one 'two' three
+
+Similarly, `ds"` would produce
+
+    one two three
+
+### Installation
 
 Six needs to find this plugin to register it.
 To make it happen:
@@ -68,3 +83,9 @@ can find the tests under _Packages/User/six/tests_.
 
 When you run the tests in UnitTesting,
 give it the *User* package name.
+
+
+#### Credits
+
+The surround plugin
+is a port of [vim surround](https://github.com/tpope/vim-surround).
